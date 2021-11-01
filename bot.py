@@ -25,7 +25,7 @@ with sq.connect('DataBase.db') as con:
         guild INT NOT NULL,
         user INT NOT NULL,
         reason TEXT NOT NULL,
-        active BOOL DEFAULT TRUE
+        active INTEGER DEFAULT 1
 
         )""")
 
@@ -48,7 +48,7 @@ with sq.connect('DataBase.db') as con:
 
 @bot.event
 async def on_ready():
-          await bot.change_presence(status=discord.Status.online, activity=discord.Game("Разработчик Kira#6666"))
+	await bot.change_presence(status=discord.Status.online, activity=discord.Game("Разработчик Kira#6666"))
 
 @bot.remove_command('help') #удаляем команду help
 
@@ -181,7 +181,7 @@ async def flip(ctx):
 @bot.command()
 async def warnadd(ctx, opponent: discord.Member, warnreason: str):
 	member = ctx.message.author
-	print(f"{datetime.now()} {member} вызвал warnadd") #ПРИНТЫ
+	print(f"{datetime.now()} {member} выдает варн {opponent} с причиной: {warnreason}") #ПРИНТЫ
 	cur.execute(f"SELECT id_who_give FROM whogivewarn WHERE guild_id = {ctx.guild.id}")
 	record = cur.fetchall()
 	if len(record) == 0:
@@ -191,7 +191,9 @@ async def warnadd(ctx, opponent: discord.Member, warnreason: str):
 	date_end = warn_date + timedelta(+7)
 	cur.execute(f"INSERT INTO warn (warn_date, date_out, guild, user, reason) VALUES('{warn_date}', '{date_end}', {ctx.guild.id}, {opponent.id}, '{warnreason}')")
 	con.commit()
-	print(record)
+	await ctx.message.author.send(f"Вы выдали варн {opponent}")
+	await opponent.send(f"{member} выдал вам варн, с причиной: {warnreason}")
+
 
 
 @bot.command()
@@ -220,6 +222,7 @@ async def warnlist(ctx, opponent: discord.Member):
 
 @bot.command()
 async def warnremove(ctx, warnid: str):
+	print(f"{datetime.now()} {ctx.message.author} снял варн с номером ID {warnid} ") #ПРИНТЫ
 	cur.execute(f"SELECT id_who_give FROM whogivewarn WHERE guild_id = {ctx.guild.id}")
 	record = cur.fetchall()
 	if len(record) == 0:
@@ -230,7 +233,7 @@ async def warnremove(ctx, warnid: str):
 	if cur.rowcount < 1:
 	    await ctx.send(f"Нет активного варна с ID: {warnid}")
 	    return
-	await ctx.send(f"Вы сняли варн с номером ID: {warnid}")
+	await ctx.message.author.send(f"Вы сняли варн с номером ID: {warnid}")
 	
 
 @bot.command()
